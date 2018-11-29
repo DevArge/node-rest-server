@@ -3,9 +3,10 @@ const app = express()
 const bcrypt = require('bcrypt')
 const _ = require('underscore')
 const Usuario = require('../models/usuario');
+const { verificaToken, verificaAdminRole } = require('../middlewares/autenticacion')
 
-
-app.get('/usuario', function (req, res) {
+app.get('/usuario', verificaToken, (req, res)=> {
+    //PRIMERO SE EJECUTA EL MIDDLEWARE Verificatoken
     let desde = req.query.desde || 0;
     desde = Number(desde);
     let limite = req.query.limite || 5;
@@ -31,7 +32,7 @@ app.get('/usuario', function (req, res) {
 
 });
   
-app.post('/usuario', function (req, res) {
+app.post('/usuario', [verificaToken, verificaAdminRole], (req, res)=> {
     //el body aparece cuando el bodyparser procese las peticiones
     let body = req.body;
     let usuario = new Usuario({
@@ -62,7 +63,7 @@ app.post('/usuario', function (req, res) {
 //   }
 });
   
-app.put('/usuario/:id', function (req, res) {
+app.put('/usuario/:id', [verificaToken, verificaAdminRole], (req, res)=> {
     let id = req.params.id;
     let body = _.pick(req.body, ['nombre', 'email', 'role', 'img', 'estado']);
 //   delete body.password;
@@ -83,7 +84,7 @@ app.put('/usuario/:id', function (req, res) {
 
 });
   
-app.delete('/usuario/:id', function (req, res) {
+app.delete('/usuario/:id', [verificaToken, verificaAdminRole], (req, res)=> {
     let id = req.params.id
     let cambiaEstado = {estado:false};
     Usuario.findByIdAndUpdate(id, cambiaEstado, {new:true}, (err, usuarioBorrado)=>{
